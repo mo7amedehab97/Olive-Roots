@@ -32,7 +32,7 @@ export const getAllComments = async (
                 },
             },
             { $unwind: "$blog" },
-            { $match: { "blog.author": new Types.ObjectId(userId) } },
+            { $match: { "blog.author": userId } },
             {
                 $project: {
                     content: 1,
@@ -58,7 +58,7 @@ export const getAllComments = async (
                 },
             },
             { $unwind: "$blog" },
-            { $match: { "blog.author": new Types.ObjectId(userId) } },
+            { $match: { "blog.author": userId } },
             { $count: "total" },
         ]);
 

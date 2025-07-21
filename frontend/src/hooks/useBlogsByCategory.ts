@@ -1,31 +1,29 @@
 import { blogCategories, type BlogCategory } from '@constants/categories';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import axiosInstance from '@utils/axiosInstance';
-import { z } from "zod";
+import * as yup from "yup";
 
+const blogSchema = yup.object({
+    _id: yup.string().required(),
+    title: yup.string().required(),
+    description: yup.string().required(),
+    category: yup.mixed<typeof blogCategories[number]>().oneOf(blogCategories).required(),
+    image: yup.string().url().required()
+});
 
-const blogSchema = z.object({
-    _id: z.string(),
-    title: z.string(),
-    description: z.string(),
-    category: z.enum(blogCategories),
-    image: z.string().url()
-})
+const paginationSchema = yup.object({
+    currentPage: yup.number().required(),
+    totalPages: yup.number().required(),
+    hasNextPage: yup.boolean().required(),
+    hasPrevPage: yup.boolean().required()
+});
 
-
-const paginationSchema = z.object({
-    currentPage: z.number(),
-    totalPages: z.number(),
-    hasNextPage: z.boolean(),
-    hasPrevPage: z.boolean()
-})
-
-const blogsResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.array(blogSchema),
-    pagination: paginationSchema
-})
+const blogsResponseSchema = yup.object({
+    success: yup.boolean().required(),
+    message: yup.string().required(),
+    data: yup.array(blogSchema).required(),
+    pagination: paginationSchema.required()
+});
 
 export type BlogCategoryFilter = "all" | BlogCategory;
 
@@ -35,24 +33,23 @@ type UseBlogsByCategoryParams = {
     q?: string
 }
 
-
 export async function fetchBlogsByCategory(category: BlogCategoryFilter, page = 1, q = "") {
-
     const { data } = await axiosInstance.get(`/v1/blogs/category/${category}`, {
         params: { page, q }
     });
-
-    const parsed = blogsResponseSchema.safeParse(data);
-    if (!parsed.success) {
-        console.error("Response validation failed:", parsed.error.flatten());
+    try {
+        await blogsResponseSchema.validate(data, { abortEarly: false });
+    } catch (error) {
+        console.error("Response validation failed:", error);
         throw new Error("Invalid response data");
     }
     return {
-        blogs: parsed.data.data,
-        pagination: parsed.data.pagination
+        blogs: JSON.parse(JSON.stringify(data.data)),
+        pagination: JSON.parse(JSON.stringify(data.pagination))
     };
 }
 
+export type Blog = yup.InferType<typeof blogSchema>;
 
 export default function useBlogsByCategory({ category, page = 1, q }: UseBlogsByCategoryParams) {
     return useQuery({

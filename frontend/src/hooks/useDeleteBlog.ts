@@ -1,17 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { z } from 'zod';
 import useAxios from './useAxios';
-import { blogCategories } from '@constants/categories';
-
-
-const deleteBlogResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({
-        _id: z.string(),
-        category: z.enum(blogCategories)
-    })
-})
 
 
 export default function useDeleteBlog() {
@@ -23,13 +11,7 @@ export default function useDeleteBlog() {
         mutationFn: async (blogId: string) => {
             const { data } = await axios.delete(`/v1/blogs/${blogId}`);
 
-            const parsed = deleteBlogResponseSchema.safeParse(data);
-            if (!parsed.success) {
-                console.error("Delete blog response validation failed:", parsed.error.flatten());
-                throw new Error("Invalid response format");
-            }
-
-            return parsed.data;
+            return data;
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["authorBlogs"], exact: false });

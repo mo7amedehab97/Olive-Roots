@@ -42,7 +42,7 @@ import_dotenv.default.config();
 var ENV_VARS = {
   PORT: Number(process.env.PORT) || 5e3,
   NODE_ENV: process.env.NODE_ENV || "development",
-  MONGO_URI: process.env.MONGO_URI || "mongodb://localhost:27017/quickblog",
+  MONGO_URI: process.env.MONGO_URI || "mongodb://localhost:27017/oliveroots",
   FRONTEND_URI: process.env.FRONTEND_URI || "http://localhost:5173",
   JWT_SECRET: process.env.JWT_SECRET || "jwt_secret",
   REFRESH_SECRET: process.env.REFRESH_SECRET || "refresh_secret",
@@ -887,7 +887,6 @@ router2.delete(
 var blogRoutes_default = router2;
 
 // src/controllers/commentController.ts
-var import_mongoose5 = require("mongoose");
 var getAllComments = async (req, res) => {
   const limit = Number(req.query.limit) || 10;
   const page = Number(req.query.page) || 1;
@@ -909,7 +908,7 @@ var getAllComments = async (req, res) => {
         }
       },
       { $unwind: "$blog" },
-      { $match: { "blog.author": new import_mongoose5.Types.ObjectId(userId) } },
+      { $match: { "blog.author": userId } },
       {
         $project: {
           content: 1,
@@ -934,7 +933,7 @@ var getAllComments = async (req, res) => {
         }
       },
       { $unwind: "$blog" },
-      { $match: { "blog.author": new import_mongoose5.Types.ObjectId(userId) } },
+      { $match: { "blog.author": userId } },
       { $count: "total" }
     ]);
     const totalCount = total[0]?.total || 0;
@@ -1144,8 +1143,8 @@ var commentRoutes_default = router3;
 var import_express4 = require("express");
 
 // src/models/NewsletterSubscriberModel.ts
-var import_mongoose6 = require("mongoose");
-var newsletterSubscriberSchema = new import_mongoose6.Schema({
+var import_mongoose5 = require("mongoose");
+var newsletterSubscriberSchema = new import_mongoose5.Schema({
   email: {
     type: String,
     required: [true, "Email is required"],
@@ -1158,7 +1157,7 @@ var newsletterSubscriberSchema = new import_mongoose6.Schema({
     default: Date.now
   }
 }, { timestamps: true });
-var NewsletterSubscriber = (0, import_mongoose6.model)("NewsletterSubscriber", newsletterSubscriberSchema);
+var NewsletterSubscriber = (0, import_mongoose5.model)("NewsletterSubscriber", newsletterSubscriberSchema);
 
 // src/controllers/newsletterController.ts
 var subscribeToNewsletter = async (req, res) => {
@@ -1256,5 +1255,9 @@ app.use("/api/v1/auth", authRoutes_default);
 app.use("/api/v1/blogs", blogRoutes_default);
 app.use("/api/v1/comments", commentRoutes_default);
 app.use("/api/v1/newsletter", newsletterRoutes_default);
+app.listen(ENV_VARS.PORT, "0.0.0.0", () => {
+  console.log(`\u2705 App is running on http://localhost:${ENV_VARS.PORT}`);
+  connectDB();
+});
 var server_default = app;
 //# sourceMappingURL=server.cjs.map

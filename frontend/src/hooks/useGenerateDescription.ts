@@ -1,15 +1,14 @@
 import { useMutation } from '@tanstack/react-query';
 import useAxios from './useAxios';
-import { z } from 'zod';
+import * as yup from 'yup';
 
-const generateDescriptionResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({
-        description: z.string()
-    })
-})
-
+const generateDescriptionResponseSchema = yup.object({
+    success: yup.boolean().required(),
+    message: yup.string().required(),
+    data: yup.object({
+        description: yup.string().required()
+    }).required()
+});
 
 export default function useGenerateDescription() {
     const axios = useAxios();
@@ -19,13 +18,13 @@ export default function useGenerateDescription() {
         mutationFn: async (prompt: string) => {
             const { data } = await axios.post("/v1/blogs/generate-description", { prompt });
 
-            const parsed = generateDescriptionResponseSchema.safeParse(data);
-            if (!parsed.success) {
-                console.error('Response validation failed:', parsed.error.flatten());
+            try {
+                await generateDescriptionResponseSchema.validate(data, { abortEarly: false });
+                return JSON.parse(JSON.stringify(data.data));
+            } catch (error) {
+                console.error('Response validation failed:', error);
                 throw new Error('Invalid response format');
             }
-
-            return parsed.data.data;
         }
     })
 }

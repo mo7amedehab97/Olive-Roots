@@ -1,43 +1,40 @@
 import { useQuery } from '@tanstack/react-query';
 import useAxios from './useAxios';
-import { z } from 'zod';
+import * as yup from 'yup';
 
-const blogSchema = z.object({
-    _id: z.string(),
-    title: z.string(),
-    isPublished: z.boolean(),
-    createdAt: z.string()
-})
+const blogSchema = yup.object({
+    _id: yup.string().required(),
+    title: yup.string().required(),
+    isPublished: yup.boolean().required(),
+    createdAt: yup.string().required()
+});
 
-export type Blog = z.infer<typeof blogSchema>;
+const dashboardStatsSchema = yup.object({
+    success: yup.boolean().required(),
+    message: yup.string().required(),
+    data: yup.object({
+        totalBlogs: yup.number().required(),
+        totalComments: yup.number().required(),
+        totalDrafts: yup.number().required(),
+        latestBlogs: yup.array(blogSchema).required()
+    }).required()
+});
 
-const dashboardStatsSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({
-        totalBlogs: z.number(),
-        totalComments: z.number(),
-        totalDrafts: z.number(),
-        latestBlogs: z.array(blogSchema)
-    })
-})
-
+export type Blog = yup.InferType<typeof blogSchema>;
 
 export default function useDashboardStats() {
     const axios = useAxios();
-
     return useQuery({
         queryKey: ["dashboardStats"],
         queryFn: async () => {
             const { data } = await axios.get("/v1/blogs/dashboard");
-
-            const parsed = dashboardStatsSchema.safeParse(data);
-            if (!parsed.success) {
-                console.error("Dashboard stats response invalid", parsed.error.flatten());
+            try {
+                await dashboardStatsSchema.validate(data, { abortEarly: false });
+                return JSON.parse(JSON.stringify(data.data));
+            } catch (error) {
+                console.error("Dashboard stats response invalid", error);
                 throw new Error("Invalid dashboard data");
             }
-
-            return parsed.data.data;
         }
     })
 }

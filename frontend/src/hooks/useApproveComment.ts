@@ -1,16 +1,5 @@
-import { z } from 'zod';
 import useAxios from './useAxios'
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-
-const approveCommentResponse = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({
-        commentId: z.string(),
-        blogId: z.string()
-    })
-})
 
 
 export default function useApproveComment() {
@@ -21,13 +10,7 @@ export default function useApproveComment() {
         mutationKey: ["approveComment"],
         mutationFn: async (commentId: string) => {
             const { data } = await axios.patch(`/v1/comments/${commentId}/approve`);
-
-            const parsed = approveCommentResponse.safeParse(data);
-            if (!parsed.success) {
-                console.error("Response validation failed:", parsed.error.flatten());
-                throw new Error("Invalid response format");
-            }
-            return parsed.data.data;
+            return data;
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["adminComments"], exact: false });

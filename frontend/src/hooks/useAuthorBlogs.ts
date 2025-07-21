@@ -1,47 +1,44 @@
 import type { AxiosInstance } from "axios";
-import { z } from "zod";
+import * as yup from "yup";
 import useAxios from "./useAxios";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-const blogSchema = z.object({
-    _id: z.string(),
-    title: z.string(),
-    isPublished: z.boolean(),
-    createdAt: z.string(),
+const blogSchema = yup.object({
+    _id: yup.string().required(),
+    title: yup.string().required(),
+    isPublished: yup.boolean().required(),
+    createdAt: yup.string().required(),
 });
 
-const paginationSchema = z.object({
-    currentPage: z.number(),
-    totalPages: z.number(),
-    hasNextPage: z.boolean(),
-    hasPrevPage: z.boolean(),
+const paginationSchema = yup.object({
+    currentPage: yup.number().required(),
+    totalPages: yup.number().required(),
+    hasNextPage: yup.boolean().required(),
+    hasPrevPage: yup.boolean().required(),
 });
 
-const authorBlogsResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.array(blogSchema),
-    pagination: paginationSchema,
+const authorBlogsResponseSchema = yup.object({
+    success: yup.boolean().required(),
+    message: yup.string().required(),
+    data: yup.array(blogSchema).required(),
+    pagination: paginationSchema.required(),
 });
-
 
 export async function fetchAuthorBlogs(axiosInstance: AxiosInstance, page = 1) {
     const { data } = await axiosInstance.get("/v1/blogs/author", {
         params: { page },
     });
-
-    const parsed = authorBlogsResponseSchema.safeParse(data);
-    if (!parsed.success) {
-        console.error("Response validation failed:", parsed.error.flatten());
+    try {
+        await authorBlogsResponseSchema.validate(data, { abortEarly: false });
+    } catch (error) {
+        console.error("Response validation failed:", error);
         throw new Error("Invalid author blogs data");
     }
-
     return {
-        blogs: parsed.data.data,
-        pagination: parsed.data.pagination
+        blogs: JSON.parse(JSON.stringify(data.data)),
+        pagination: JSON.parse(JSON.stringify(data.pagination))
     };
 }
-
 
 export default function useAuthorBlogs(page = 1) {
     const axios = useAxios();

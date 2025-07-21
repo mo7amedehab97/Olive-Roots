@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import Quill from "quill";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { blogSchema, type BlogFormInputs } from "@validations/blogSchema";
 import useCreateBlog from "@hooks/useCreateBlog";
 import toast from "react-hot-toast";
@@ -22,7 +22,7 @@ export default function AdminAddBlog() {
     reset,
     formState: { errors },
   } = useForm<BlogFormInputs>({
-    resolver: zodResolver(blogSchema),
+    resolver: yupResolver(blogSchema),
     defaultValues: {
       thumbnail: undefined,
       title: "",

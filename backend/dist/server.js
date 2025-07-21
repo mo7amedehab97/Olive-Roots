@@ -853,7 +853,6 @@ router2.delete(
 var blogRoutes_default = router2;
 
 // src/controllers/commentController.ts
-import { Types as Types4 } from "mongoose";
 var getAllComments = async (req, res) => {
   const limit = Number(req.query.limit) || 10;
   const page = Number(req.query.page) || 1;
@@ -875,7 +874,7 @@ var getAllComments = async (req, res) => {
         }
       },
       { $unwind: "$blog" },
-      { $match: { "blog.author": new Types4.ObjectId(userId) } },
+      { $match: { "blog.author": userId } },
       {
         $project: {
           content: 1,
@@ -900,7 +899,7 @@ var getAllComments = async (req, res) => {
         }
       },
       { $unwind: "$blog" },
-      { $match: { "blog.author": new Types4.ObjectId(userId) } },
+      { $match: { "blog.author": userId } },
       { $count: "total" }
     ]);
     const totalCount = total[0]?.total || 0;
@@ -1222,6 +1221,10 @@ app.use("/api/v1/auth", authRoutes_default);
 app.use("/api/v1/blogs", blogRoutes_default);
 app.use("/api/v1/comments", commentRoutes_default);
 app.use("/api/v1/newsletter", newsletterRoutes_default);
+app.listen(ENV_VARS.PORT, "0.0.0.0", () => {
+  console.log(`\u2705 App is running on http://localhost:${ENV_VARS.PORT}`);
+  connectDB();
+});
 var server_default = app;
 export {
   server_default as default

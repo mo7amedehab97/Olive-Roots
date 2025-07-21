@@ -1,36 +1,35 @@
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@utils/axiosInstance";
-import { z } from "zod";
+import * as yup from "yup";
 
-const commentSchema = z.object({
-    _id: z.string(),
-    name: z.string(),
-    content: z.string(),
-    createdAt: z.string(),
-    updatedAt: z.string()
-})
+const commentSchema = yup.object({
+    _id: yup.string().required(),
+    name: yup.string().required(),
+    content: yup.string().required(),
+    createdAt: yup.string().required(),
+    updatedAt: yup.string().required()
+});
 
-export type Comment = z.infer<typeof commentSchema>;
+const approvedCommentsResponseSchema = yup.object({
+    success: yup.boolean().required(),
+    message: yup.string().required(),
+    data: yup.array(commentSchema).required()
+});
 
-const approvedCommentsResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.array(commentSchema)
-})
+export type Comment = yup.InferType<typeof commentSchema>;
 
 export default function useApprovedComments(blogId?: string) {
     return useQuery({
         queryKey: ["approvedComments", blogId],
         queryFn: async () => {
             const { data } = await axiosInstance.get(`/v1/comments/blog/${blogId}`);
-
-            const parsed = approvedCommentsResponseSchema.safeParse(data);
-            if (!parsed.success) {
-                console.error("Response validation failed:", parsed.error.flatten());
+            try {
+                await approvedCommentsResponseSchema.validate(data, { abortEarly: false });
+            } catch (error) {
+                console.error("Response validation failed:", error);
                 throw new Error("Invalid response format");
             }
-
-            return parsed.data.data;
+            return JSON.parse(JSON.stringify(data.data));
         },
         enabled: !!blogId
     })

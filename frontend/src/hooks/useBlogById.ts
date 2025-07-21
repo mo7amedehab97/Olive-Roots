@@ -1,28 +1,27 @@
 import { blogCategories } from '@constants/categories';
 import { useQuery } from '@tanstack/react-query';
 import axiosInstance from '@utils/axiosInstance';
-import { z } from 'zod';
+import * as yup from 'yup';
 
-const blogSchema = z.object({
-    _id: z.string(),
-    author: z.object({
-        _id: z.string(),
-        name: z.string()
-    }),
-    title: z.string(),
-    subTitle: z.string(),
-    description: z.string(),
-    image: z.string().url(),
-    category: z.enum(blogCategories),
-    createdAt: z.string()
+const blogSchema = yup.object({
+    _id: yup.string().required(),
+    author: yup.object({
+        _id: yup.string().required(),
+        name: yup.string().required()
+    }).required(),
+    title: yup.string().required(),
+    subTitle: yup.string().required(),
+    description: yup.string().required(),
+    image: yup.string().url().required(),
+    category: yup.mixed<typeof blogCategories[number]>().oneOf(blogCategories).required(),
+    createdAt: yup.string().required()
 });
 
-const blogResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: blogSchema
-})
-
+const blogResponseSchema = yup.object({
+    success: yup.boolean().required(),
+    message: yup.string().required(),
+    data: blogSchema.required()
+});
 
 export default function useBlogById(blogId?: string) {
     return useQuery({
@@ -30,13 +29,14 @@ export default function useBlogById(blogId?: string) {
         queryFn: async () => {
             const { data } = await axiosInstance.get(`/v1/blogs/${blogId}`);
 
-            const parsed = blogResponseSchema.safeParse(data);
-            if (!parsed.success) {
-                console.error("Response validation failed:", parsed.error.flatten());
+            try {
+                await blogResponseSchema.validate(data, { abortEarly: false });
+            } catch (error) {
+                console.error("Response validation failed:", error);
                 throw new Error("Invalid response data");
             }
 
-            return parsed.data.data
+            return JSON.parse(JSON.stringify(data.data));
         },
         enabled: !!blogId
     })

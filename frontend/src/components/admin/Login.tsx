@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { type LoginFormInputs, loginSchema } from "@validations/loginSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { type AxiosError } from "axios";
 
 const INITIAL_STATE: LoginFormInputs = {
@@ -23,7 +23,7 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginFormInputs>({
     defaultValues: INITIAL_STATE,
-    resolver: zodResolver(loginSchema),
+    resolver: yupResolver(loginSchema),
   });
   const [loading, setLoading] = useState(false);
 

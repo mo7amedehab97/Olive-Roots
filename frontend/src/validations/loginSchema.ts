@@ -1,17 +1,14 @@
-import { z } from "zod";
+import * as yup from "yup";
 
-export const loginSchema = z.object({
-    email: z.string({
-        required_error: "Email is required"
-    }).trim()
-        .nonempty("Email is required")
-        .email("Invalid email format"),
-
-    password: z.string({
-        required_error: "Password is required"
-    }).trim()
-        .nonempty("Email is required")
-        .min(6, "Password must be at least 6 characters")
+export const loginSchema = yup.object({
+    email: yup.string()
+        .trim()
+        .required("Email is required")
+        .email("Invalid email address"),
+    password: yup.string()
+        .trim()
+        .required("Password is required")
+        .min(6, "Password must be at least 6 characters"),
 });
 
-export type LoginFormInputs = z.infer<typeof loginSchema>;
+export type LoginFormInputs = yup.InferType<typeof loginSchema>;

@@ -1,19 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useAxios from "./useAxios";
 import type { BlogFormInputs } from "@validations/blogSchema";
-import { z } from "zod";
+import * as yup from "yup";
 import { blogCategories } from "@constants/categories";
 
-
-const CreateBlogResponse = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({
-        _id: z.string(),
-        category: z.enum(blogCategories)
-    })
-})
-
+const CreateBlogResponse = yup.object({
+    success: yup.boolean().required(),
+    message: yup.string().required(),
+    data: yup.object({
+        _id: yup.string().required(),
+        category: yup.mixed<typeof blogCategories[number]>().oneOf(blogCategories).required()
+    }).required()
+});
 
 export default function useCreateBlog() {
     const axios = useAxios();
@@ -36,13 +34,14 @@ export default function useCreateBlog() {
                 }
             });
 
-            const parsed = CreateBlogResponse.safeParse(data);
-            if (!parsed.success) {
-                console.error("Invalid blog creation response:", parsed.error.format());
+            try {
+                await CreateBlogResponse.validate(data, { abortEarly: false });
+            } catch (error) {
+                console.error("Invalid blog creation response:", error);
                 throw new Error("Invalid response from server.");
             }
 
-            return parsed.data;
+            return data;
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });

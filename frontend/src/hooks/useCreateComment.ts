@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@utils/axiosInstance";
-import { z } from "zod";
+import * as yup from "yup";
 
-const commentResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string()
-})
+const commentResponseSchema = yup.object({
+    success: yup.boolean().required(),
+    message: yup.string().required()
+});
 
 type CreateCommentInput = {
     name: string,
@@ -19,16 +19,14 @@ export default function useCreateComment(blogId?: string) {
         mutationKey: ["createComment", blogId],
         mutationFn: async (commentData: CreateCommentInput) => {
             if (!blogId) throw new Error("Blog ID is required");
-
             const { data } = await axiosInstance.post(`/v1/comments/${blogId}`, commentData);
-
-            const parsed = commentResponseSchema.safeParse(data);
-            if (!parsed.success) {
-                console.error('Invalid comment response:', parsed.error.flatten());
+            try {
+                await commentResponseSchema.validate(data, { abortEarly: false });
+                return JSON.parse(JSON.stringify(data));
+            } catch (error) {
+                console.error('Invalid comment response:', error);
                 throw new Error('Invalid response data');
             }
-
-            return parsed.data
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });

@@ -1,20 +1,16 @@
-import { z } from "zod";
+import * as yup from "yup";
 
-
-export const createCommentSchema = z.object({
-    name: z.string({
-        required_error: "Name is required"
-    })
-        .nonempty("Name is required")
+export const createCommentSchema = yup.object({
+    name: yup.string()
+        .trim()
+        .required("Name is required")
         .min(3, "Name must be at least 3 characters")
         .max(30, "Name must be at most 30 characters"),
-
-    content: z.string({
-        required_error: "Content is required"
-    })
-        .nonempty("Content is required")
+    content: yup.string()
+        .trim()
+        .required("Content is required")
         .min(3, "Content must be at least 3 characters")
-        .max(1000, "Content must be at most 100 characters")
-})
+        .max(1000, "Content must be at most 1000 characters")
+});
 
-export type CommentInputs = z.infer<typeof createCommentSchema>;
+export type CommentInputs = yup.InferType<typeof createCommentSchema>;

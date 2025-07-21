@@ -8,7 +8,7 @@ import {
   type RegisterFormInputs,
   registerSchema,
 } from "@validations/registerSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { type AxiosError } from "axios";
 
 const INITIAL_STATE: RegisterFormInputs = {
@@ -27,7 +27,7 @@ export default function Signup() {
     formState: { errors },
   } = useForm<RegisterFormInputs>({
     defaultValues: INITIAL_STATE,
-    resolver: zodResolver(registerSchema),
+    resolver: yupResolver(registerSchema),
   });
   const [loading, setLoading] = useState(false);
 

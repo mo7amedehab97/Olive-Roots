@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import useAxios from "@hooks/useAxios";
 import CommentTableSkeleton from "@components/skeletons/CommentTableSkeleton";
 import ErrorMessage from "@components/ErrorMessage";
+import type { Comment } from "@hooks/useAdminComments";
 
 export default function AdminComments() {
   const queryClient = useQueryClient();
@@ -103,7 +104,7 @@ export default function AdminComments() {
               isLoading ? (
                 <CommentTableSkeleton />
               ) : comments?.length !== 0 ? (
-                comments?.map((comment) => (
+                comments?.map((comment: Comment) => (
                   <CommentRow key={comment._id} comment={comment} />
                 ))
               ) : (
