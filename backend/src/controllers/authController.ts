@@ -33,8 +33,8 @@ export const register = async (req: Request<{}, {}, RegisterInput>, res: Respons
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: ENV_VARS.NODE_ENV === "production",
-            sameSite: "strict",
+            secure: true,
+            sameSite: "none",
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
@@ -78,8 +78,8 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response) => 
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: ENV_VARS.NODE_ENV === "production",
-            sameSite: "strict",
+            secure: true,
+            sameSite: "none",
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
@@ -171,8 +171,8 @@ export const logout = (req: Request, res: Response) => {
 
     res.clearCookie("refreshToken", {
         httpOnly: true,
-        sameSite: "strict",
-        secure: ENV_VARS.NODE_ENV === "production"
+        sameSite: "none",
+        secure: true
     })
 
     res.status(200).json({
